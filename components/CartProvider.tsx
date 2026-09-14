@@ -9,15 +9,44 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  useEffect(() => { try { setItems(JSON.parse(localStorage.getItem('lumiere-cart') || '[]')); } catch {} }, []);
-  useEffect(() => { localStorage.setItem('lumiere-cart', JSON.stringify(items)); }, [items]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      setItems(JSON.parse(localStorage.getItem('lumiere-cart') || '[]'));
+    } catch {
+      setItems([]);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) localStorage.setItem('lumiere-cart', JSON.stringify(items));
+  }, [items, hydrated]);
+
   const value = useMemo(() => ({
-    items, count: items.reduce((s, i) => s + i.quantity, 0), total: items.reduce((s, i) => s + i.price * i.quantity, 0),
-    add: (p: Product) => setItems(cur => { const found = cur.find(i => i.id === p.id); return found ? cur.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i) : [...cur, { ...p, quantity: 1 }]; }),
-    remove: (id: string) => setItems(cur => cur.filter(i => i.id !== id)),
-    setQuantity: (id: string, q: number) => setItems(cur => q < 1 ? cur.filter(i => i.id !== id) : cur.map(i => i.id === id ? { ...i, quantity: q } : i)),
+    items,
+    count: items.reduce((sum, item) => sum + item.quantity, 0),
+    total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    add: (p: Product) => setItems((cur) => {
+      const found = cur.find((item) => item.id === p.id);
+      return found
+        ? cur.map((item) => item.id === p.id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...cur, { ...p, quantity: 1 }];
+    }),
+    remove: (id: string) => setItems((cur) => cur.filter((item) => item.id !== id)),
+    setQuantity: (id: string, q: number) => setItems((cur) => q < 1
+      ? cur.filter((item) => item.id !== id)
+      : cur.map((item) => item.id === id ? { ...item, quantity: q } : item)),
     clear: () => setItems([]),
   }), [items]);
+
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
-export const useCart = () => { const ctx = useContext(CartContext); if (!ctx) throw new Error('useCart must be inside CartProvider'); return ctx; };
+
+export const useCart = () => {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error('useCart must be inside CartProvider');
+  return ctx;
+};
