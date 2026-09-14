@@ -15,15 +15,17 @@ export default function CatalogClient() {
   if (sort === 'new') list = list.filter((p) => p.tags.includes('Новинки'));
   if (sort === 'popular') list = list.filter((p) => p.tags.includes('Хиты'));
 
+  const filters = ['Все', 'Букеты', 'Розы', 'Цветы в коробке', 'Мягкие игрушки'];
+
   return <>
     <Header />
     <main className="container catalog">
       <div className="breadcrumb">Главная / Каталог</div>
       <div className="catalog-head">
-        <div><span className="eyebrow">LUMIÈRE FLOWERS</span><h1>{category || 'Каталог цветов'}</h1><p>Свежие букеты, розы и цветы в коробках с доставкой день в день.</p></div>
+        <div><span className="eyebrow">LUMIÈRE FLOWERS</span><h1>{category || 'Каталог подарков'}</h1><p>Свежие букеты, розы, цветы в коробках и мягкие игрушки с доставкой день в день.</p></div>
         <select defaultValue=""><option value="">Сортировка</option><option>Сначала популярные</option><option>Сначала дешевле</option></select>
       </div>
-      <div className="filter-row">{['Все','Букеты','Розы','Цветы в коробке'].map((x) => <a key={x} className={!category && x === 'Все' || category === x ? 'active' : ''} href={x === 'Все' ? '/catalog' : `/catalog?category=${encodeURIComponent(x)}`}>{x}</a>)}</div>
+      <div className="filter-row">{filters.map((x) => <a key={x} className={!category && x === 'Все' || category === x ? 'active' : ''} href={x === 'Все' ? '/catalog' : `/catalog?category=${encodeURIComponent(x)}`}>{x}</a>)}</div>
       <div className="product-grid">{list.map((p) => <ProductCard key={p.id} product={p} />)}</div>
       {!list.length && <div className="empty">По вашему фильтру ничего не найдено.</div>}
     </main>
